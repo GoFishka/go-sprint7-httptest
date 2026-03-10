@@ -62,7 +62,7 @@ func TestCafeCount(t *testing.T) {
 		{city: "moscow", count: 0, want: 0},
 		{city: "moscow", count: 1, want: 1},
 		{city: "moscow", count: 2, want: 2},
-		{city: "moscow", count: 100, want: 100},
+		{city: "moscow", count: 100, want: min(100, len(cafeList["moscow"]))},
 	}
 
 	for _, v := range request {
@@ -72,8 +72,6 @@ func TestCafeCount(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, response.Code)
 
-		cafeWantCount := min(v.want, len(cafeList[v.city]))
-
 		responseString := strings.TrimSpace(response.Body.String())
 
 		responseLen := 0
@@ -81,7 +79,7 @@ func TestCafeCount(t *testing.T) {
 			responseLen = len(strings.Split(responseString, ","))
 		}
 
-		assert.Equal(t, cafeWantCount, responseLen)
+		assert.Equal(t, v.want, responseLen)
 	}
 }
 
@@ -103,16 +101,20 @@ func TestCafeSearch(t *testing.T) {
 		req := httptest.NewRequest("GET", "/cafe?city="+v.city+"&search="+v.search, nil)
 		handler.ServeHTTP(response, req)
 
+		require.Equal(t, http.StatusOK, response.Code)
+
 		responseString := strings.TrimSpace(response.Body.String())
 
-		responseLen := 0
+		searchCafes := []string{}
 
 		if responseString != "" {
-			responseLen = len(strings.Split(responseString, ","))
+			searchCafes = strings.Split(responseString, ",")
 		}
 
-		searchWantCount := min(v.wantCount, len(cafeList[v.city]))
+		assert.Len(t, searchCafes, v.wantCount)
 
-		assert.Equal(t, searchWantCount, responseLen)
+		for _, cafe := range searchCafes {
+			assert.Contains(t, strings.ToLower(cafe), strings.ToLower(v.search))
+		}
 	}
 }
