@@ -74,12 +74,13 @@ func TestCafeCount(t *testing.T) {
 
 		responseString := strings.TrimSpace(response.Body.String())
 
-		responseLen := 0
+		searchCafes := []string{}
+
 		if responseString != "" {
-			responseLen = len(strings.Split(responseString, ","))
+			searchCafes = strings.Split(responseString, ",")
 		}
 
-		assert.Equal(t, v.want, responseLen)
+		assert.Len(t, searchCafes, v.want)
 	}
 }
 
